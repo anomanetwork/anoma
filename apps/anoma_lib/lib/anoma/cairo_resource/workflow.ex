@@ -228,22 +228,16 @@ defmodule Anoma.CairoResource.Workflow do
   end
 
   @spec update_witnesses(
-          list(binary()),
+          list(Jason.OrderedObject.t()),
           list(Resource.t()),
           list(binary()),
           list(list(Jason.OrderedObject.t()))
         ) ::
           {:ok, list(binary())} | {:error, term()}
   def update_witnesses(witnesses, resources, nf_keys, merkle_paths) do
-    with {:ok, witness_jsons} <-
-           Enum.map(
-             witnesses,
-             &Jason.decode(&1, objects: :ordered_objects)
-           )
-           |> Utils.check_list(),
-         updated_witness_jsons =
+    with updated_witness_jsons =
            Enum.zip_with(
-             witness_jsons,
+             witnesses,
              Enum.zip(resources, Enum.zip(nf_keys, merkle_paths)),
              fn json, {r, {nk, p}} -> update_witness_json(json, r, nk, p) end
            ),
