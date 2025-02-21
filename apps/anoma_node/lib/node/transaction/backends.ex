@@ -111,7 +111,10 @@ defmodule Anoma.Node.Transaction.Backends do
 
     env = %Nock{scry_function: scry}
     vm_result = vm_execute(tx_code, env, id)
-    Events.transaction_result(id, vm_result, node_id, __MODULE__)
+
+    event(backend, fn ->
+      Events.transaction_result(id, vm_result, node_id, __MODULE__)
+    end)
 
     res =
       with {:ok, vm_res} <- vm_result,
@@ -125,12 +128,23 @@ defmodule Anoma.Node.Transaction.Backends do
           :error
       end
 
-    Events.transaction_complete(id, res, node_id, __MODULE__)
+    event(backend, fn ->
+      Events.transaction_complete(id, res, node_id, __MODULE__)
+    end)
   end
 
   ############################################################
   #                       VM Execution                       #
   ############################################################
+
+  @spec event(backend(), (-> :ok)) :: :ok
+  defp event({:read_only, _}, _event) do
+    :ok
+  end
+
+  defp event(_backend, event) do
+    event.()
+  end
 
   @spec vm_execute(Noun.t(), Nock.t(), binary()) ::
           {:ok, Noun.t()} | :vm_error
