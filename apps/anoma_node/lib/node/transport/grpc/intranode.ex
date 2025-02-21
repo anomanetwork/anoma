@@ -43,7 +43,6 @@ defmodule Anoma.Node.Transport.GRPC.Behavior do
         message: %PubSub.Message{message: inspect(event.event)}
       })
 
-    IO.inspect(request)
 
     PubSubService.Stub.publish(channel, request)
   end
